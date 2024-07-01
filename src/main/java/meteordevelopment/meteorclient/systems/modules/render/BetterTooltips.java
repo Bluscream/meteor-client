@@ -21,7 +21,7 @@ import meteordevelopment.meteorclient.utils.player.EChestMemory;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.tooltip.*;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.component.ComponentMap;
+import net.minecraft.block.entity.BeehiveBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.*;
 import net.minecraft.component.type.BannerPatternsComponent.Layer;
@@ -33,7 +33,6 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.*;
-import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.RawFilteredPair;
@@ -41,7 +40,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.collection.DefaultedList;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 
@@ -255,17 +253,15 @@ public class BetterTooltips extends Module {
         //Beehive
         if (beehive.get()) {
             if (event.itemStack.getItem() == Items.BEEHIVE || event.itemStack.getItem() == Items.BEE_NEST) {
-                ComponentMap components = event.itemStack.getComponents();
-                BlockStateComponent blockStateComponent = components.get(DataComponentTypes.BLOCK_STATE);
+                BlockStateComponent blockStateComponent = event.itemStack.get(DataComponentTypes.BLOCK_STATE);
                 if (blockStateComponent != null) {
                     String level = blockStateComponent.properties().get("honey_level");
                     event.list.add(1, Text.literal(String.format("%sHoney level: %s%s%s.", Formatting.GRAY, Formatting.YELLOW, level, Formatting.GRAY)));
                 }
 
-                NbtComponent nbtComponent = components.get(DataComponentTypes.BLOCK_ENTITY_DATA);
-                if (nbtComponent != null) {
-                    NbtList beesTag = nbtComponent.copyNbt().getList("Bees", 10);
-                    event.list.add(1, Text.literal(String.format("%sBees: %s%d%s.", Formatting.GRAY, Formatting.YELLOW, beesTag.size(), Formatting.GRAY)));
+                List<BeehiveBlockEntity.BeeData> bees = event.itemStack.get(DataComponentTypes.BEES);
+                if (bees != null) {
+                    event.list.add(1, Text.literal(String.format("%sBees: %s%d%s.", Formatting.GRAY, Formatting.YELLOW, bees.size(), Formatting.GRAY)));
                 }
             }
         }
@@ -284,8 +280,8 @@ public class BetterTooltips extends Module {
                 else count = String.format("%d bytes", byteCount);
 
                 event.list.add(Text.literal(count).formatted(Formatting.GRAY));
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                event.list.add(Text.literal("Error getting bytes.").formatted(Formatting.RED));
             }
         }
 
